@@ -18,6 +18,12 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <style>
+        .nav-link.active {
+            color: #900C3F !important;
+            border-bottom: 2px solid #900C3F;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -32,14 +38,18 @@
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
+                    @guest
+                    <!-- Nothing -->
+                    @else
                     <ul class="navbar-nav mr-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="/home">Home</a>
+                            <a class="nav-link {{$view_name == 'home' ? 'active' : ''}}" href="/home">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/tasks">Tasks</a>
+                            <a class="nav-link {{strpos($view_name, 'task') !== false ? 'active' : ''}}" href="/tasks">Tasks</a>
                         </li>
                     </ul>
+                    @endguest
 
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ml-auto">
