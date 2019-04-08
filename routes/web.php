@@ -18,3 +18,10 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/tasks', 'TasksController@index')->name('tasks');
+Route::get('/task/{taskId}', function($taskId) {
+    $task = \App\Task::where('id', $taskId)->first(); // Should this be handled in the controller?  If so, how do I specify controller when passing a param?
+    return view('tasks.task', [
+        'task' => $task
+    ]);
+})->name('task');

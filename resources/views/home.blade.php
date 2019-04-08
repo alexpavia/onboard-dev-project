@@ -14,7 +14,8 @@
                         </div>
                     @endif
 
-                    You are logged in!
+                    Welcome!
+                    <p><a href="/tasks">Tasks</a></p>
                 </div>
             </div>
         </div>
