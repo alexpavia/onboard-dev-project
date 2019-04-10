@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Task;
 use App\Note;
 use App\User;
+use Illuminate\Support\Facades\Auth;
 
 class TasksController extends Controller
 {
@@ -18,58 +19,104 @@ class TasksController extends Controller
     {
         $tasks = Task::all();
 
-        return view('tasks.index', ['tasks' => $tasks]);
+        return view('tasks.index', [
+            'tasks' => $tasks
+        ]);
     }
+
     public function get($taskId)
     {
-        // Set mode ('new' or 'edit')
+        // Get task from Tasks table
+        $task = Task::where('id', $taskId)->first();
+        return $task;
+    }
+
+    public function processTask($task)
+    {
+        // Get creator name from Users table
+        $taskCreatorId = $task->user_id;
+        $taskCreatorName = User::where('id', $taskCreatorId)->first()->name;
+
+        // Add $taskCreatorName to $task
+        $task->createdBy = $taskCreatorName;
+
+        // Get related Notes from Notes table
+        $notes = Note::where('task_id', $task->id)->get();
+
+        // Process each note
+        $notes->map(function($note, $key){
+            // Get creator name from Users table
+            $noteCreatorId = $note->user_id;
+            $noteCreatorName = User::where('id', $noteCreatorId)->first()->name;
+
+            // Add $creatorName to $note
+            $note->createdBy = $noteCreatorName;
+            return $note;
+        });
+
+        // Add processed $notes to $task
+        $task->notes = $notes->all();
+
+        return $task;
+    }
+
+    public function loadTask($taskId)
+    {
+        // Get Task
+        $rawTask = $this->get($taskId);
+
+        // Process Task
+        $task = $this->processTask($rawTask);
+
+        return view('tasks.task', [
+            'task' => $task,
+            'mode' => 'read'
+        ]);
+    }
+
+    public function edit($taskId)
+    {
+        // Check $taskId value and set $mode accordingly
         if ($taskId === 'new') {
             $mode = 'new';
             $task = new Task();
         } else {
             $mode = 'edit';
 
-            // Get task from Tasks table
-            $task = Task::where('id', $taskId)->first();
+            // Get Task
+            $rawTask = $this->get($taskId);
 
-            // Use note IDs to get each note from Notes table.
-            // Push each note into new array, "notesDetails"
-            // Add notesDetails to $task
-            $noteIds = $task->notes;
-            $notesArray = array();
-            for ($i = 0; $i < count($noteIds); $i++) {
-                $note = Note::where('id', $noteIds[$i])->first();
-
-                // Get creator name from Users table
-                $creatorId = $note->created_by;
-                $creatorName = User::where('id', $creatorId)->first()->name;
-                // Add $creatorName to $note
-                $note->createdBy = $creatorName;
-
-                array_push($notesArray, $note);
-            }
-            $task->notesDetails = $notesArray;
+            // Process Task
+            $task = $this->processTask($rawTask);
         }
-
-        return view('tasks.task', ['task' => $task, 'mode' => $mode]);
+        return view('tasks.task', [
+            'task' => $task,
+            'mode' => $mode
+        ]);
     }
+
+    public function updateTask()
+    {
+        return request();
+    }
+
     public function store()
     {
+        $userId = Auth::id();
+
+        // Build Task
         $task = new Task();
         $task->name = request('name');
-        $task->description = request('description');
-
+        $task->details = request('details');
+        $task->user_id = $userId;
+        // Build Note
         $note = new Note();
-        $note->name = request('noteName');
-        $note->description = request('noteDescription');
+        $note->details = request('noteDetails');
+        $note->user_id = $userId;
+        // Save Task and Note
+        $task->save();
+        $task->notes()->save($note);
 
-        /*TODO Find out how to elegantly do this save.*/
-        /* 1. Save task to get taskId */
-        /* 2. Add taskId to Note, then save Note */
-        /* 3. On Note save callback, get noteId */
-        /* 4. Update task to have noteId and save */
-
-        // $task->save();
-        // return redirect('/tasks');
+        return redirect('/tasks');
     }
 }

@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Task extends Model
 {
-    protected $casts = [
-        'notes' => 'array'
-    ];
+    public function notes()
+    {
+        return $this->hasMany('App\Note');
+    }
 }
