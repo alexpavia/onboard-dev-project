@@ -11,7 +11,14 @@
     </div>
     <div class="row justify-content-center">
         <div class="col-md-8">
-            {!! Form::model($task,['action'=>'TasksController@updateTask']) !!}
+            @if ($mode === 'edit')
+                {!! Form::model($task,['url'=>'task/edit/'.$task->id]) !!}
+                @method('PATCH')
+            @else
+                {!! Form::model($task,['url'=>'task/new']) !!}
+                @method('POST')
+            @endif
+
 
             <div class="form-group">
                 {!! Form::label('name', 'Task Name') !!}
@@ -21,19 +28,19 @@
                 {!! Form::label('details', 'Details') !!}
                 {!! Form::textarea('details', null, ['class' => 'form-control', 'rows' => 4, 'placeholder' => 'Enter some details']) !!}
             </div>
-            <div class="form-group">
-                {!! Form::label('noteDetails', 'Notes') !!}
-
-                @foreach ($task->notes as $key => $note)
-                {!! Form::textarea('notes['.$key.'][details]', null, ['class' => 'form-control mb-3', 'rows' => 2, 'placeholder' => 'Write a note']) !!}
-                @endforeach
-
-                <a href="#" class="btn btn-outline-info btn-lg btn-block">Add Note</a>
-            </div>
 
             <button type="submit" class="btn btn-primary float-right">Save</button>
-            <a href="/tasks" class="btn btn-outline-danger" role="button">Cancel</a>
+            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary" role="button">Cancel</a>
             {!! Form::close() !!}
+
+            @if ($mode === 'edit')
+                {!! Form::model($task,['url'=>'task/delete/'.$task->id]) !!}
+                @method('DELETE')
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-outline-danger btn-lg btn-block">Delete</button>
+                </div>
+                {!! Form::close() !!}
+            @endif
         </div>
     </div>
 
@@ -41,33 +48,48 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
 
-                <div class="card mb-3">
+                <div class="card mb-5">
                     <div class="card-header d-flex flex-row justify-content-between">
                         <h2 class="mb-0">{{ $task->name }}</h2>
-                        <small class="text-muted">Created by {{$task->createdBy}} on {{$task->created_at->format('m/d/Y')}}</small>
+                        <small class="text-muted">Created by {{$task->createdBy}} on {{$task->updated_at->format('m/d/Y')}}</small>
                     </div>
                     <div class="card-body">
                         <div class="">
                             <h4>Details</h4>
                             <p>{{ $task->details }}</p>
                         </div>
+                        <div class="float-right">
+                            <a href="/task/edit/{{$task->id}}">Edit</a>
+                        </div>
+
                     </div>
                 </div>
-                <div class="card">
+
+                <h4 class="mb-3">Notes</h4>
+
+                @foreach ($task->notes as $note)
+                <div class="card mb-3">
                     <div class="card-body">
-                        <h4 class="mb-3">Notes</h4>
-                        @foreach ($task->notes as $note)
-                        <div class="d-flex flex-column mb-2">
+                        <div class="d-flex flex-column">
                             <p>{{$note->details}}</p>
-                            <small class="text-muted">{{$note->createdBy}} - {{$note->created_at->format('m/d/Y')}}</small>
+                            <span>
+                                <small class="text-muted">{{$note->createdBy}} - {{$note->updated_at->format('m/d/Y')}}</small>
+                                <div class="float-right">
+                                    <a href="/note/edit/{{$note->id}}">Edit</a>
+                                </div>
+                            </span>
                         </div>
-                        @endforeach
                     </div>
+                </div>
+                @endforeach
+
+                <div class="">
+                    <a href="/note/create/{{$task->id}}" class="btn btn-success btn-lg btn-block">Add Note</a>
                 </div>
 
                 <div class="mt-3">
                     <a href="/tasks" class="btn btn-outline-secondary" role="button">Back to Tasks</a>
-                    <a href="/task/edit/{{$task->id}}" class="btn btn-success float-right" role="button">Edit Task</a>
+
                 </div>
             </div>
         </div>

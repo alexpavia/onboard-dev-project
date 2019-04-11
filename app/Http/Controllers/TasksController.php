@@ -95,9 +95,18 @@ class TasksController extends Controller
         ]);
     }
 
-    public function updateTask()
+    public function updateTask($taskId)
     {
-        return request();
+        // Get task
+        $task = Task::find($taskId);
+
+        // Add new task values
+        $task->name = request('name');
+        $task->details = request('details');
+
+        $task->save();
+
+        return redirect('/task/'.$taskId);
     }
 
     public function store()
@@ -109,13 +118,20 @@ class TasksController extends Controller
         $task->name = request('name');
         $task->details = request('details');
         $task->user_id = $userId;
-        // Build Note
-        $note = new Note();
-        $note->details = request('noteDetails');
-        $note->user_id = $userId;
+
         // Save Task and Note
         $task->save();
-        $task->notes()->save($note);
+
+        return redirect('/tasks');
+    }
+
+    public function destroy($taskId)
+    {
+        // Delete associated notes
+        Note::where('task_id', $taskId)->delete();
+
+        // Delete task
+        Task::where('id', $taskId)->delete();
 
         return redirect('/tasks');
     }
